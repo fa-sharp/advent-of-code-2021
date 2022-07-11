@@ -7,7 +7,7 @@ for line in file:
     if (line != ""):
         depthMeasurements.append(int(line))
 
-# Calculate how many times the depth increased, by iterating over the array and comapring prev to current
+# Calculate how many times the depth increased, by iterating over the array and comparing prev to current
 numIncreased = 0
 prevDepth = None
 for currentDepth in depthMeasurements:
