@@ -7,16 +7,22 @@ const main = async () => {
 
     /** @type {{ rounds: number; score: number } | null} */
     let bestBoard = null;
+    /** @type {{ rounds: number; score: number } | null} */
+    let worstBoard = null;
 
     for (const board of bingoBoards) {
         const boardResults = playBoard(board, drawnNums);
         if (boardResults) {
             if (!bestBoard) bestBoard = boardResults;
             else if (boardResults.rounds < bestBoard.rounds) bestBoard = boardResults;
+
+            if (!worstBoard) worstBoard = boardResults;
+            else if (boardResults.rounds > worstBoard.rounds) worstBoard = boardResults;
         }
     }
 
     console.log(`The best board will win in ${bestBoard?.rounds} rounds and have a final score of ${bestBoard?.score}`)
+    console.log(`The worst board will win in ${worstBoard?.rounds} rounds and have a final score of ${worstBoard?.score}`)
 }
 
 main();
@@ -33,7 +39,7 @@ main();
     // For each round
     for (let round = 0; round < drawnNums.length; round++) {
         let drawnNum = drawnNums[round];
-        
+
         // Try to find the drawn number on the board, and mark it if found
         const foundCell = board.find(cell => cell.num === drawnNum);
         if (foundCell) foundCell.marked = true;
@@ -66,8 +72,8 @@ function isWinningBoard(board) {
 
     // Check columns (every 5 cells => e.g. indices [0, 5, 10, 15, 20], [1, 6, 11, 16, 21])
     for (let column = 0; column < 5; column++) {
-        const columnArray = board.filter((_, idx) => (idx - column) % 5 === 0);
-        const isWinningColumn = columnArray.every(cell => cell.marked === true);
+        const columnCells = board.filter((_, idx) => (idx - column) % 5 === 0);
+        const isWinningColumn = columnCells.every(cell => cell.marked === true);
         if (isWinningColumn) return true;
     }
 
