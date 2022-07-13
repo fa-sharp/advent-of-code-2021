@@ -4,4 +4,5 @@ These are the problems from [Advent of Code 2021](https://adventofcode.com/2021)
 
 ## Languages used
  - Python (Day 1)
- - Rust (Day 2)
+ - Rust (Days 2, 3)
+ - JavaScript (Day 4)
