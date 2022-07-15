@@ -19,21 +19,17 @@ fn main() {
   /* A hashmap to keep track of how many times each point is traversed by a line */
   let mut traversed_points_map: HashMap<Point, u32> = HashMap::new();
 
-  /* Utility function to either add or update a traversed point value */
-  let mut upsert_traversed_point = |point: Point| {
-    if traversed_points_map.contains_key(&point) {
-      let traversed_value = traversed_points_map.get_mut(&point).unwrap();
-      *traversed_value += 1;
-    } else {
-      traversed_points_map.insert(point, 1);
-    }
-  };
-
   // Process each line and update the traversed points hashmap
   for (point1, point2) in &lines_vector {
     let ref mut current_point = point1.clone();
     loop {
-      upsert_traversed_point(*current_point);
+      traversed_points_map.insert(
+        *current_point,
+        *traversed_points_map
+          .get(current_point)
+          .unwrap_or_else(|| &0)
+          + 1,
+      );
 
       if point2.eq(current_point) {
         break;
