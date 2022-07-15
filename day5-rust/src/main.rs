@@ -1,12 +1,12 @@
 use std::{
-  collections::{HashMap},
+  collections::HashMap,
   fs::File,
   io::{self, BufRead},
   num::ParseIntError,
-  path::Path, cmp,
+  path::Path,
 };
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy)]
 struct Point {
   x: i32,
   y: i32,
@@ -24,40 +24,45 @@ fn main() {
     if traversed_points_map.contains_key(&point) {
       let traversed_value = traversed_points_map.get_mut(&point).unwrap();
       *traversed_value += 1;
-    }
-    else {
+    } else {
       traversed_points_map.insert(point, 1);
     }
   };
 
+  // Process each line and update the traversed points hashmap
   for (point1, point2) in &lines_vector {
+    let ref mut current_point = point1.clone();
+    loop {
+      upsert_traversed_point(*current_point);
 
-    // vertical line
-    if point1.x == point2.x {
-      for y in cmp::min(point1.y, point2.y)..=cmp::max(point1.y, point2.y) {
-        let traversed_point = Point { x: point1.x, y };
-        upsert_traversed_point(traversed_point);
+      if point2.eq(current_point) {
+        break;
       }
-    }
-    // horizontal line 
-    else if point1.y == point2.y {
-      for x in cmp::min(point1.x, point2.x)..=cmp::max(point1.x, point2.x) {
-        let traversed_point = Point { x, y: point1.y };
-        upsert_traversed_point(traversed_point);
+
+      if current_point.x < point2.x {
+        current_point.x += 1;
+      } else if current_point.x > point2.x {
+        current_point.x -= 1;
+      }
+
+      if current_point.y < point2.y {
+        current_point.y += 1;
+      } else if current_point.y > point2.y {
+        current_point.y -= 1;
       }
     }
   }
 
-  /* Retain points that have been traversed at least 2 times */
+  // Retain points that have been traversed at least 2 times
   traversed_points_map.retain(|_, traversed_value| *traversed_value >= 2);
 
   println!("RESULTS");
   println!("-------------------");
-  println!("Number of points that have been traversed at least 2 times: {}", traversed_points_map.len());
-
+  println!(
+    "Number of points that have been traversed at least 2 times: {}",
+    traversed_points_map.len()
+  );
 }
-
-
 
 fn get_lines_from_input() -> io::Result<Vec<(Point, Point)>> {
   let mut lines_vector: Vec<(Point, Point)> = Vec::new();
