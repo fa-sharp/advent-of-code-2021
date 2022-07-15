@@ -27,7 +27,7 @@ fn main() {
         *current_point,
         *traversed_points_map
           .get(current_point)
-          .unwrap_or_else(|| &0)
+          .get_or_insert(&0)
           + 1,
       );
 
