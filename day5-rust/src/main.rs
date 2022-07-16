@@ -23,13 +23,7 @@ fn main() {
   for (point1, point2) in &lines_vector {
     let ref mut current_point = point1.clone();
     loop {
-      traversed_points_map.insert(
-        *current_point,
-        *traversed_points_map
-          .get(current_point)
-          .get_or_insert(&0)
-          + 1,
-      );
+      *traversed_points_map.entry(*current_point).or_insert(0) += 1;
 
       if point2.eq(current_point) {
         break;
