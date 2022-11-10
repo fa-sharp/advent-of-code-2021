@@ -65,11 +65,7 @@ fn main() {
 }
 
 /** Calculate basin size through path traversal / recursion */
-fn get_basin_size(
-  point: &Point,
-  points_hashmap: &HashMap<Point, u8>,
-  points_traversed: &mut HashSet<Point>,
-) -> u32 {
+fn get_basin_size(point: &Point, points_hashmap: &HashMap<Point, u8>, points_traversed: &mut HashSet<Point>) -> u32 {
   points_traversed.insert(*point);
 
   let top_point = Point {
@@ -150,8 +146,7 @@ fn get_points_from_input() -> io::Result<HashMap<Point, u8>> {
         x: x.try_into().unwrap(),
         y: y.try_into().unwrap(),
       };
-      let height =
-        u8::from_str_radix(&height_char.to_string(), 10).expect("Couldn't parse height!");
+      let height = u8::from_str_radix(&height_char.to_string(), 10).expect("Couldn't parse height!");
       points_hashmap.insert(point, height);
     }
   }
