@@ -18,24 +18,50 @@ enum Chunk {
 
 fn main() {
   let mut syntax_error_score = 0;
+  let mut autocomplete_scores: Vec<u64> = vec![];
+  
   for line_result in read_raw_lines_from_file("input.txt").expect("Couldn't read file!") {
     let line = line_result.expect("Error while reading file!");
-    if let Some(incorrect_chunk) = find_incorrect_chunk(&line) {
-      match incorrect_chunk {
-        Chunk::CloseAngle => syntax_error_score += 25137,
-        Chunk::CloseBrace => syntax_error_score += 1197,
-        Chunk::CloseParen => syntax_error_score += 3,
-        Chunk::CloseSquare => syntax_error_score += 57,
-        _ => panic!("Unexpected incorrect opening chunk '{:#?}'", incorrect_chunk),
+    let (incorrect_chunk, autocomplete_chunks) = process_chunks_in_line(&line);
+    match incorrect_chunk {
+      None => (),
+      Some(Chunk::CloseAngle) => syntax_error_score += 25137,
+      Some(Chunk::CloseBrace) => syntax_error_score += 1197,
+      Some(Chunk::CloseParen) => syntax_error_score += 3,
+      Some(Chunk::CloseSquare) => syntax_error_score += 57,
+      _ => panic!("Unexpected incorrect opening chunk '{:#?}'", incorrect_chunk),
+    }
+    match autocomplete_chunks {
+      None => (),
+      Some(chunks) => {
+        let mut score = 0_u64;
+        for chunk in chunks {
+          match chunk {
+            Chunk::CloseAngle => score = score * 5 + 4,
+            Chunk::CloseParen => score = score * 5 + 1,
+            Chunk::CloseBrace => score = score * 5 + 3,
+            Chunk::CloseSquare => score = score * 5 + 2,
+            _ => panic!("Unexpected autocompleted opening chunk '{:#?}'", chunk),
+          }
+        }
+        autocomplete_scores.push(score);
       }
     }
   }
+
   println!("Syntax error score: {}", syntax_error_score);
+
+  autocomplete_scores.sort();
+  let middle_score = autocomplete_scores.get((autocomplete_scores.len() - 1) / 2);
+  println!("Middle auto-complete score: {}", middle_score.expect("No middle score found!"))
 }
 
-/** Returns the first incorrect chunk, if it exists.
- * Uses a stack (push/pop) to check proper open and closing braces */
-fn find_incorrect_chunk(line: &str) -> Option<Chunk> {
+/** Returns a tuple of Options:
+ * first incorrect chunk, if it exists.
+ * if all chunks are correct, a vector of auto-completed chunks needed to complete this line.
+ 
+ Uses a stack structure (push/pop) to check proper open and closing braces */
+fn process_chunks_in_line(line: &str) -> (Option<Chunk>, Option<Vec<Chunk>>) {
   let chunks = convert_line_to_chunks(line);
   let mut stack: Vec<Chunk> = vec![];
 
@@ -45,34 +71,50 @@ fn find_incorrect_chunk(line: &str) -> Option<Chunk> {
       Chunk::CloseAngle => {
         if let Some(last_chunk) = stack.pop() {
           if last_chunk != Chunk::OpenAngle {
-            return Some(chunk);
+            return (Some(chunk), None);
           }
         }
       }
       Chunk::CloseBrace => {
         if let Some(last_chunk) = stack.pop() {
           if last_chunk != Chunk::OpenBrace {
-            return Some(chunk);
+            return (Some(chunk), None);
           }
         }
       }
       Chunk::CloseParen => {
         if let Some(last_chunk) = stack.pop() {
           if last_chunk != Chunk::OpenParen {
-            return Some(chunk);
+            return (Some(chunk), None);
           }
         }
       }
       Chunk::CloseSquare => {
         if let Some(last_chunk) = stack.pop() {
           if last_chunk != Chunk::OpenSquare {
-            return Some(chunk);
+            return (Some(chunk), None);
           }
         }
       }
     }
   }
-  None // if we get here, chunks are valid!
+  
+  // If we get here, all chunks are valid! Auto-complete the line by examining the remaining stack
+  // Stack should only contain opening chunks
+  let mut autocomplete_chunks: Vec<Chunk> = vec![];
+  while stack.len() > 0 {
+    if let Some(remaining_chunk) = stack.pop() {
+      match remaining_chunk {
+        Chunk::OpenAngle => autocomplete_chunks.push(Chunk::CloseAngle),
+        Chunk::OpenBrace => autocomplete_chunks.push(Chunk::CloseBrace),
+        Chunk::OpenParen => autocomplete_chunks.push(Chunk::CloseParen),
+        Chunk::OpenSquare => autocomplete_chunks.push(Chunk::CloseSquare),
+        _ => panic!("Unexpected closing chunk found in stack: '{:#?}'", remaining_chunk)
+      }
+    }
+  }
+
+  (None, Some(autocomplete_chunks))
 }
 
 fn convert_line_to_chunks(line: &str) -> Vec<Chunk> {
