@@ -1,53 +1,50 @@
 use std::{
-  collections::{HashMap},
+  collections::HashMap,
   fs::File,
   io::{self, BufRead},
   path::Path,
 };
 
 fn main() {
-  println!("Hello, world!");
   let cave_paths = get_cave_paths_from_input().expect("Error reading input");
-  find_all_paths(&cave_paths);
-  println!("Done!");
+  let all_paths = find_all_paths(&cave_paths);
+  
+  println!("Found {} paths!", all_paths.len());
 }
 
 fn find_all_paths(paths_hashmap: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {
   let start_cave = "start";
-  let current_path = vec![start_cave.to_string()];
   let mut all_paths: Vec<Vec<String>> = vec![];
-  let possible_caves = paths_hashmap.get(start_cave).expect("start cave should exist");
-  explore_paths(current_path, &mut all_paths, possible_caves, paths_hashmap);
-  
+  let possible_next_caves = paths_hashmap.get(start_cave).expect("start cave should exist");
+  for next_cave in possible_next_caves {
+    let current_path = vec![start_cave.to_string()];
+    explore_paths(current_path, &mut all_paths, next_cave.to_string(), paths_hashmap);
+  }
+
   all_paths
 }
 
 fn explore_paths(
   current_path: Vec<String>,
   all_paths: &mut Vec<Vec<String>>,
-  possible_caves: &Vec<String>,
+  next_cave: String,
   cave_paths_hashmap: &HashMap<String, Vec<String>>,
 ) {
-  for cave in possible_caves {
-    if cave == "end" {
-      all_paths.push(current_path);
-      return;
-    } else if cave == "start" {
-      return;
-    } else if cave.to_lowercase() == *cave && current_path.contains(cave) {
-      return;
-    } else {
-      let next_possible_caves = cave_paths_hashmap.get(cave).expect("cave should exist");
-      for cave in next_possible_caves {
-        let mut new_path = current_path.clone();
-        new_path.push(cave.to_string());
-        explore_paths(
-          new_path,
-          all_paths,
-          next_possible_caves,
-          cave_paths_hashmap,
-        );
-      }
+  if next_cave == "end" {
+    let mut final_path = current_path.clone();
+    final_path.push(next_cave.to_string());
+    all_paths.push(final_path);
+    return;
+  } else if next_cave == "start" {
+    return;
+  } else if next_cave.to_lowercase() == next_cave && current_path.contains(&next_cave) {
+    return;
+  } else {
+    let possible_future_caves = cave_paths_hashmap.get(&next_cave).expect("cave should exist");
+    for future_cave in possible_future_caves {
+      let mut new_path = current_path.clone();
+      new_path.push(next_cave.to_string());
+      explore_paths(new_path, all_paths, future_cave.to_string(), cave_paths_hashmap);
     }
   }
 }
